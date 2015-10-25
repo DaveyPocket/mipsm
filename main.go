@@ -37,9 +37,12 @@ func main() {
 		panic(err)
 	}
 	*/
+	f_assemble("ADDI $s0, $ze, 0")
+	f_assemble("ADDI $s2, $ze, 0")
+	f_assemble("ADDI $s3, $ze, 0")
 	f_assemble("ADDI $s1, $ze, 1")
-	f_assemble("ANDI $s2, $s2, 1")
-	f_assemble("BNE $s2, $s1, 4")
+	f_assemble("ANDI $s2, $s1, 1")
+	f_assemble("BNE $s2, $ze, 4")
 	f_assemble("ADD $s3, $s1, $ze")
 	f_assemble("ADD $s1, $s0, $s1")
 	f_assemble("ADD $s0, $s3, $ze")
@@ -64,6 +67,7 @@ func f_assemble(in string) {
 	}
 	fmt.Println(inst)
 	t_thing := instrType[inst]
+	inst = ""
 	switch t_thing.fam {
 	case t_R:
 		t_opcode, t_function = t_thing.opcode, t_thing.funct
@@ -71,7 +75,7 @@ func f_assemble(in string) {
 	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_rd&0x1E)>>1, (t_rd&0x01)<<3 + (t_shamt&0x1C)>>2, (t_shamt&0x03)<<2 + (t_function&0x38)>>4, (t_function&0x0F))
 	case t_I:
 		t_opcode = t_thing.opcode
-		t_rs, t_rt, t_imm = f_getIType(in)
+		t_rt, t_rs, t_imm = f_getIType(in)
 	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_imm&0xF000) >> 12, (t_imm&0x0F00) >> 8, (t_imm&0x00F0) >> 4, (t_imm&0x000F))
 	}
 /*	switch in[0:3] {
