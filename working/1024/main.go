@@ -1,11 +1,6 @@
-//TODO
-//	Add I-Type instructions
-//	Add J-Type instructions
-
 package main
 
 import ("fmt"
-			"strconv"
 		//	"os"
 		)
 var prog string
@@ -37,46 +32,24 @@ func main() {
 		panic(err)
 	}
 	*/
-	f_assemble("ADDI $s1, $ze, 1")
-	f_assemble("ANDI $s2, $s2, 1")
-	f_assemble("BNE $s2, $s1, 4")
-	f_assemble("ADD $s3, $s1, $ze")
-	f_assemble("ADD $s1, $s0, $s1")
-	f_assemble("ADD $s0, $s3, $ze")
-	f_assemble("BEQ $ze, $ze, -6")
-	f_assemble("ADD $s0, $s1, $ze")
-	f_assemble("ADD $s1, $s1, $s1")
-	f_assemble("BEQ $ze, $ze, -9")
+	f_assemble("SUB $t0, $t1, $t0")
+	f_assemble("ADD $t1, $t0, $t0")
+	f_assemble("ADD $t2, $t0, $t1")
+	f_assemble("ADD $t3, $t2, $t2")
+	f_assemble("ADD $t4, $t3, $t2")
+	f_assemble("ADD $t5, $t4, $t4")
+	f_assemble("ADD $t6, $t5, $t4")
+	f_assemble("ADD $t7, $t6, $t6")
+	f_assemble("ADD $t8, $t7, $t6")
 	fmt.Println(prog)
 	fmt.Println(instrType["BEQ"])
 }
 
 func f_assemble(in string) {
 	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
-	var t_imm uint16
-	var inst string
-	for _, val := range in {
-		if val != ' ' {
-			inst += string(val)
-		} else {
-			break
-		}
-	}
-	fmt.Println(inst)
-	t_thing := instrType[inst]
-	switch t_thing.fam {
-	case t_R:
-		t_opcode, t_function = t_thing.opcode, t_thing.funct
-		t_rd, t_rs, t_rt = f_getRType(in)
-	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_rd&0x1E)>>1, (t_rd&0x01)<<3 + (t_shamt&0x1C)>>2, (t_shamt&0x03)<<2 + (t_function&0x38)>>4, (t_function&0x0F))
-	case t_I:
-		t_opcode = t_thing.opcode
-		t_rs, t_rt, t_imm = f_getIType(in)
-	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_imm&0xF000) >> 12, (t_imm&0x0F00) >> 8, (t_imm&0x00F0) >> 4, (t_imm&0x000F))
-	}
-/*	switch in[0:3] {
+	switch in[0:3] {
 	case "ADD":
-		t_thing := instrType[in[0:3]]
+		t_opcode = 0
 		t_function = 0x20
 		fmt.Print(in[0:3], " ")
 		t_rd, t_rs, t_rt = f_getRType(in)
@@ -113,17 +86,13 @@ func f_assemble(in string) {
 	case "SLTU":
 		t_opcode = 0
 		t_function = 0x2B
-	}*/
+	}
 	// The pretty-print below is of key importance. Correctly segments the fields of an R-Type instruction into a proper 32-bit hex string.
+	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_rd&0x1E)>>1, (t_rd&0x01)<<3 + (t_shamt&0x1C)>>2, (t_shamt&0x03)<<2 + (t_function&0x38)>>4, (t_function&0x0F))
 }
 
 func f_getRType(in string) (uint8, uint8, uint8){
 	return f_getReg(in, 0), f_getReg(in, 1), f_getReg(in, 2)
-}
-
-
-func f_getIType(in string) (uint8, uint8, uint16){
-	return f_getReg(in, 0), f_getReg(in, 1), uint16(f_getImm(in))
 }
 
 func f_getReg(in string, c int) uint8 {
@@ -133,35 +102,12 @@ func f_getReg(in string, c int) uint8 {
 			count++
 		}
 		if count == c {
-			//fmt.Print(in[i:i+3], " ")
+			fmt.Print(in[i:i+3], " ")
 			return regAddr[in[i:i+3]]
 		}
 	}
 	return 255
 }
-
-func f_getImm(in string) uint32 {
-	var count int = 0
-	for i, val := range in {
-		if val == ',' {
-			count++
-		}
-		if count == 2 {
-			num, _ := strconv.ParseInt(in[i + 2:len(in)], 10, 32)
-			fmt.Println(num)
-			return uint32(num)
-			//return regAddr[in[i:len(in) - i]]
-		}
-	}
-	return 255
-}
-//	MIPS R-Type
-// OPCODE - RS - RT - RD - SHAMT - FUNCT
-// MIPS I-TYPE
-// OPCODE - RS - RT - IMMEDIATE
-// MIPS J-TYPE
-// OPCODE - ADDRESS
-
 // Lexer
 // Parser
 // Code generator
@@ -191,20 +137,10 @@ var instrType map[string]t_instrType = map[string]t_instrType {
 	"SLT": {t_R, 0, 0x2A},
 	"SLTU": {t_R, 0, 0x2B},
 	"BEQ": {t_I, 0x04, 0},
-	"BNE": {t_I, 0x05, 0},
-	"ADDI": {t_I, 0x08, 0},
-	"ADDIU": {t_I, 0x09, 0},
-	"ANDI": {t_I, 0x0C, 0},
-	"ORI": {t_I, 0x0F, 0},
-	"LW": {t_I, 0x23, 0},
-	"SW": {t_I, 0x2B, 0},
-	"SLTI": {t_I, 0x0A, 0},
-	"SLTIU": {t_I, 0x0B, 0},
 }
 
 var regAddr map[string]uint8 = map[string]uint8 {
 	"$zero": 0,
-	"$ze": 0,
 	"$at": 1,
 	"$v0": 2,
 	"$v1": 3,
