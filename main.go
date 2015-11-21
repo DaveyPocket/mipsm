@@ -1,6 +1,8 @@
 //TODO
-//	Add I-Type instructions
-//	Add J-Type instructions
+//Clean
+//Order for rt and rs fields for BEQ and BNE instructions
+//,, for instructions lacking register fields
+//Immediate sizes
 
 package main
 
@@ -37,26 +39,33 @@ func main() {
 		panic(err)
 	}
 	*/
-	f_assemble("ADDI $s0, $ze, 0")
-	f_assemble("ADDI $s2, $ze, 0")
-	f_assemble("ADDI $s3, $ze, 0")
-	f_assemble("ADDI $s1, $ze, 1")
-	f_assemble("ANDI $s2, $s1, 1")
-	f_assemble("BNE $s2, $ze, 4")
-	f_assemble("ADD $s3, $s1, $ze")
-	f_assemble("ADD $s1, $s0, $s1")
-	f_assemble("ADD $s0, $s3, $ze")
-	f_assemble("BEQ $ze, $ze, -6")
-	f_assemble("ADD $s0, $s1, $ze")
-	f_assemble("ADD $s1, $s1, $s1")
-	f_assemble("BEQ $ze, $ze, -9")
+
+	f_assemble("ADD $t4, $ze, $ze")
+	f_assemble("ADDI $s0, $ze, 1")
+	f_assemble("ADDI $s1, $ze, 5")
+	f_assemble("LW $t0, $t4, 0")
+	f_assemble("ADDI $t4, $t4, 4")
+	f_assemble("ADDI $t5, $ze, 32")
+	f_assemble("JR $ze, $t5, $ze")
+	f_assemble("ADDI $t6, $ze, 1")
+	f_assemble("LW $t1, $t4, 0")// Sum - inst 8
+	f_assemble("ADD $t0, $t1, $t0")
+	f_assemble("J ,, 12")
+	f_assemble("ADDI $t6, $t6, 1")
+	f_assemble("ADDI $t4, $t4, 4")// Inct - inst 12
+	f_assemble("BEQ $s1, $s0, 3")
+	f_assemble("ADDI $s0, $s0, 1")
+	f_assemble("JAL ,, 8")
+	f_assemble("ADDI $t6, $t6, 1")
+	f_assemble("SW $t0, $t4, 0")//Store - inst 17
 	fmt.Println(prog)
-	fmt.Println(instrType["BEQ"])
+	fmt.Println(instrType["JR"])
 }
 
 func f_assemble(in string) {
 	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
 	var t_imm uint16
+	var t_imm2 uint32
 	var inst string
 	for _, val := range in {
 		if val != ' ' {
@@ -72,11 +81,15 @@ func f_assemble(in string) {
 	case t_R:
 		t_opcode, t_function = t_thing.opcode, t_thing.funct
 		t_rd, t_rs, t_rt = f_getRType(in)
-	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_rd&0x1E)>>1, (t_rd&0x01)<<3 + (t_shamt&0x1C)>>2, (t_shamt&0x03)<<2 + (t_function&0x38)>>4, (t_function&0x0F))
+		prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_rd&0x1E)>>1, (t_rd&0x01)<<3 + (t_shamt&0x1C)>>2, (t_shamt&0x03)<<2 + (t_function&0x38)>>4, (t_function&0x0F))
 	case t_I:
 		t_opcode = t_thing.opcode
 		t_rt, t_rs, t_imm = f_getIType(in)
-	prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_imm&0xF000) >> 12, (t_imm&0x0F00) >> 8, (t_imm&0x00F0) >> 4, (t_imm&0x000F))
+		prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3)<<2 + (t_rs&0x18)>>3, (t_rs&0x07)<<1 + (t_rt&0x10)>>4, (t_rt&0x0F), (t_imm&0xF000) >> 12, (t_imm&0x0F00) >> 8, (t_imm&0x00F0) >> 4, (t_imm&0x000F))
+	case t_J:
+		t_opcode = t_thing.opcode
+		t_imm2 = (f_getJType(in))
+		prog += fmt.Sprintf("x\"%x%x\",x\"%x%x\",x\"%x%x\",x\"%x%x\", \n", (t_opcode&0x3C)>>2, (t_opcode&3) << 2 + uint8(((t_imm2&0x0F000000) >> 24)&2), (t_imm2&0x00F00000) >> 20,(t_imm2&0x000F0000) >> 16, (t_imm2&0x0000F000) >> 12, (t_imm2&0x00000F00) >> 8, (t_imm2&0x000000F0) >> 4, (t_imm2&0x0000000F))
 	}
 /*	switch in[0:3] {
 	case "ADD":
@@ -128,6 +141,10 @@ func f_getRType(in string) (uint8, uint8, uint8){
 
 func f_getIType(in string) (uint8, uint8, uint16){
 	return f_getReg(in, 0), f_getReg(in, 1), uint16(f_getImm(in))
+}
+
+func f_getJType(in string) (uint32){
+	return f_getImm(in)
 }
 
 func f_getReg(in string, c int) uint8 {
@@ -194,6 +211,7 @@ var instrType map[string]t_instrType = map[string]t_instrType {
 	"NOR": {t_R, 0, 0x27},
 	"SLT": {t_R, 0, 0x2A},
 	"SLTU": {t_R, 0, 0x2B},
+	"JR": {t_R, 0, 0x08},
 	"BEQ": {t_I, 0x04, 0},
 	"BNE": {t_I, 0x05, 0},
 	"ADDI": {t_I, 0x08, 0},
@@ -204,6 +222,8 @@ var instrType map[string]t_instrType = map[string]t_instrType {
 	"SW": {t_I, 0x2B, 0},
 	"SLTI": {t_I, 0x0A, 0},
 	"SLTIU": {t_I, 0x0B, 0},
+	"J": {t_J, 0x02, 0},
+	"JAL": {t_J, 0x03, 0},
 }
 
 var regAddr map[string]uint8 = map[string]uint8 {
