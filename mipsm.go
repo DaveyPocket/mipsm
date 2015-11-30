@@ -4,7 +4,7 @@
 //,, for instructions lacking register fields
 //Immediate sizes
 
-package main
+package mipsm
 
 import ("fmt"
 			"strconv"
@@ -32,37 +32,11 @@ const(t_R t_family = iota
 		t_I
 		t_J
 		)
-
-func main() {
-	/*f, err := os.Open(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-	*/
-
-	f_assemble("ADD $t4, $ze, $ze")
-	f_assemble("ADDI $s0, $ze, 1")
-	f_assemble("ADDI $s1, $ze, 5")
-	f_assemble("LW $t0, $t4, 0")
-	f_assemble("ADDI $t4, $t4, 4")
-	f_assemble("ADDI $t5, $ze, 32")
-	f_assemble("JR $ze, $t5, $ze")
-	f_assemble("ADDI $t6, $ze, 1")
-	f_assemble("LW $t1, $t4, 0")// Sum - inst 8
-	f_assemble("ADD $t0, $t1, $t0")
-	f_assemble("J ,, 12")
-	f_assemble("ADDI $t6, $t6, 1")
-	f_assemble("ADDI $t4, $t4, 4")// Inct - inst 12
-	f_assemble("BEQ $s1, $s0, 3")
-	f_assemble("ADDI $s0, $s0, 1")
-	f_assemble("JAL ,, 8")
-	f_assemble("ADDI $t6, $t6, 1")
-	f_assemble("SW $t0, $t4, 0")//Store - inst 17
-	fmt.Println(prog)
-	fmt.Println(instrType["JR"])
+func F_getProgString() string {
+	return prog
 }
 
-func f_assemble(in string) {
+func F_assemble(in string) {
 	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
 	var t_imm uint16
 	var t_imm2 uint32
@@ -74,7 +48,6 @@ func f_assemble(in string) {
 			break
 		}
 	}
-	fmt.Println(inst)
 	t_thing := instrType[inst]
 	inst = ""
 	switch t_thing.fam {
@@ -169,7 +142,6 @@ func f_getImm(in string) uint32 {
 		}
 		if count == 2 {
 			num, _ := strconv.ParseInt(in[i + 2:len(in)], 10, 32)
-			fmt.Println(num)
 			return uint32(num)
 			//return regAddr[in[i:len(in) - i]]
 		}
