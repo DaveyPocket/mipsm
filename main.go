@@ -39,25 +39,25 @@ func main() {
 		panic(err)
 	}
 	*/
+	f_assemble("LW $s1, $ze, 48") // main
+	f_assemble("OR $a0, $s1, $ze")
+	f_assemble("JAL ,, 12")
+	f_assemble("OR $s0, $v0, $ze")
+	f_assemble("SW $s1, $ze, 52")	// loop
+	f_assemble("OR $a0, $s1, $ze")
+	f_assemble("JAL ,, 12")
+	f_assemble("BEQ $ze, $v0, 7")
+	f_assemble("ADD $s3, $s1, $ze")
+	f_assemble("ADD $s1, $s0, $s1")
+	f_assemble("ADD $s0, $s3, $ze")
+	f_assemble("J ,, 4")
+	f_assemble("NOR $a0, $a0, $zero") // EVEN
+	f_assemble("ANDI $v0, $a0, 1")
+	f_assemble("JR $ze, $ra, $ze")
+	f_assemble("ADD $s0, $s1, $ze")	//toItself
+	f_assemble("ADD $s1, $s1, $s1")
+	f_assemble("BEQ $ze, $ze, -14")
 
-	f_assemble("ADD $t4, $ze, $ze")
-	f_assemble("ADDI $s0, $ze, 1")
-	f_assemble("ADDI $s1, $ze, 5")
-	f_assemble("LW $t0, $t4, 0")
-	f_assemble("ADDI $t4, $t4, 4")
-	f_assemble("ADDI $t5, $ze, 32")
-	f_assemble("JR $ze, $t5, $ze")
-	f_assemble("ADDI $t6, $ze, 1")
-	f_assemble("LW $t1, $t4, 0")// Sum - inst 8
-	f_assemble("ADD $t0, $t1, $t0")
-	f_assemble("J ,, 12")
-	f_assemble("ADDI $t6, $t6, 1")
-	f_assemble("ADDI $t4, $t4, 4")// Inct - inst 12
-	f_assemble("BEQ $s1, $s0, 3")
-	f_assemble("ADDI $s0, $s0, 1")
-	f_assemble("JAL ,, 8")
-	f_assemble("ADDI $t6, $t6, 1")
-	f_assemble("SW $t0, $t4, 0")//Store - inst 17
 	fmt.Println(prog)
 	fmt.Println(instrType["JR"])
 }
