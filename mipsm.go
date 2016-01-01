@@ -3,12 +3,13 @@
 //Order for rt and rs fields for BEQ and BNE instructions
 //,, for instructions lacking register fields
 //Immediate sizes
-
-package mipsm
+//Support for pseudo instructions
+package main
 
 import (
 	"fmt"
-	"pPrint"
+	"mipsm/pretty"
+	"mipsm/scrubber"
 	"strconv"
 	//	"os"
 )
@@ -45,6 +46,11 @@ func F_getProgString() string {
 	return prog
 }
 
+func main() {
+	sample := "     	 ADD   $t0   ,   $t1, $T5"
+	fmt.Println(scrubber.Scrub(sample))
+}
+
 // F_assemble is an exported function of the mipsm package. The function takes in a single line of MIPS assembly code and pretty-prints a string of the assembled machine code line.
 func F_assemble(in string) {
 	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
@@ -58,21 +64,21 @@ func F_assemble(in string) {
 			break
 		}
 	}
-	t_thing := instrType[inst]
+	t_thing := coreInstrType[inst]
 	inst = ""
 	switch t_thing.fam {
 	case t_R:
 		t_opcode, t_function = t_thing.opcode, t_thing.funct
 		t_rd, t_rs, t_rt = f_getRType(in)
-		pPrint.PrintRType(t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt)
+		pretty.PrintRType(t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt)
 	case t_I:
 		t_opcode = t_thing.opcode
 		t_rt, t_rs, t_imm = f_getIType(in)
-		pPrint.PrintIType(t_opcode, t_rs, t_rt, t_imm)
+		pretty.PrintIType(t_opcode, t_rs, t_rt, t_imm)
 	case t_J:
 		t_opcode = t_thing.opcode
 		t_imm2 = (f_getJType(in))
-		pPrint.PrintJType(t_opcode, t_imm)
+		pretty.PrintJType(t_opcode, t_imm2)
 	}
 }
 
@@ -91,6 +97,10 @@ func f_getIType(in string) (uint8, uint8, uint16) {
 func f_getJType(in string) uint32 {
 	return f_getImm(in)
 }
+
+// f_getJLiteral gets resolves a pseudo-direct address for the given label. Symbol table contains labels and associated address values. DOES NOT HANDLE CLEANING UP STRING!!!
+//func f_getJLiteral(in string) uint32 {
+//}
 
 // f_getReg returns the register index associated with c'th register denoted in the assembly instruction line.
 func f_getReg(in string, c int) uint8 {
@@ -149,30 +159,30 @@ func f_getImm(in string) uint32 {
 // SLTU	0	0x2B
 
 // The map below maps instructions to an t_instrType datatype that contains the opcode/function, as well as the addressing mode of the instruction.
-var instrType map[string]t_instrType = map[string]t_instrType{
-	"ADD":   {t_R, 0, 0x20},
-	"ADDU":  {t_R, 0, 0x21},
-	"SUB":   {t_R, 0, 0x22},
-	"SUBU":  {t_R, 0, 0x23},
-	"AND":   {t_R, 0, 0x24},
-	"OR":    {t_R, 0, 0x25},
-	"XOR":   {t_R, 0, 0x26},
-	"NOR":   {t_R, 0, 0x27},
-	"SLT":   {t_R, 0, 0x2A},
-	"SLTU":  {t_R, 0, 0x2B},
-	"JR":    {t_R, 0, 0x08},
-	"BEQ":   {t_I, 0x04, 0},
-	"BNE":   {t_I, 0x05, 0},
-	"ADDI":  {t_I, 0x08, 0},
-	"ADDIU": {t_I, 0x09, 0},
-	"ANDI":  {t_I, 0x0C, 0},
-	"ORI":   {t_I, 0x0F, 0},
-	"LW":    {t_I, 0x23, 0},
-	"SW":    {t_I, 0x2B, 0},
-	"SLTI":  {t_I, 0x0A, 0},
-	"SLTIU": {t_I, 0x0B, 0},
-	"J":     {t_J, 0x02, 0},
-	"JAL":   {t_J, 0x03, 0},
+var coreInstrType map[string]t_instrType = map[string]t_instrType{
+	"add":   {t_R, 0, 0x20},
+	"addu":  {t_R, 0, 0x21},
+	"sub":   {t_R, 0, 0x22},
+	"subu":  {t_R, 0, 0x23},
+	"and":   {t_R, 0, 0x24},
+	"or":    {t_R, 0, 0x25},
+	"xor":   {t_R, 0, 0x26},
+	"nor":   {t_R, 0, 0x27},
+	"slt":   {t_R, 0, 0x2A},
+	"sltu":  {t_R, 0, 0x2B},
+	"jr":    {t_R, 0, 0x08},
+	"beq":   {t_I, 0x04, 0},
+	"bne":   {t_I, 0x05, 0},
+	"addi":  {t_I, 0x08, 0},
+	"addiu": {t_I, 0x09, 0},
+	"andi":  {t_I, 0x0C, 0},
+	"ori":   {t_I, 0x0F, 0},
+	"lw":    {t_I, 0x23, 0},
+	"sw":    {t_I, 0x2B, 0},
+	"slti":  {t_I, 0x0A, 0},
+	"sltiu": {t_I, 0x0B, 0},
+	"j":     {t_J, 0x02, 0},
+	"jal":   {t_J, 0x03, 0},
 }
 
 // The map below maps the register strings to their corresponding 8-bit unsigned integer index.
