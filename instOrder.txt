@@ -1,0 +1,8 @@
+This document contains a list of instructions and the order in which the field should appear in.
+
+Format - Instruction
+
+R - add $rd, $rs, $rt
+R - addu $rd, $rs, $rt
+R - and $rd, $rs, $rt
+I - beq $rs, $rt, label

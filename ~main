@@ -57,9 +57,7 @@ func main() {
 	f_assemble("ADD $s0, $s1, $ze")	//toItself
 	f_assemble("ADD $s1, $s1, $s1")
 	f_assemble("BEQ $ze, $ze, -14")
-
 	fmt.Println(prog)
-	fmt.Println(instrType["JR"])
 }
 
 func f_assemble(in string) {
@@ -74,7 +72,6 @@ func f_assemble(in string) {
 			break
 		}
 	}
-	fmt.Println(inst)
 	t_thing := instrType[inst]
 	inst = ""
 	switch t_thing.fam {
@@ -169,7 +166,6 @@ func f_getImm(in string) uint32 {
 		}
 		if count == 2 {
 			num, _ := strconv.ParseInt(in[i + 2:len(in)], 10, 32)
-			fmt.Println(num)
 			return uint32(num)
 			//return regAddr[in[i:len(in) - i]]
 		}
