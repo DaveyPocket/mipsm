@@ -19,3 +19,27 @@ func TestParseRType(t *testing.T) {
 		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
 	}
 }
+
+func TestParseIBranch(t *testing.T) {
+	testString := "bne $s0, $s1, myRoutine"
+	want := IType{"bne", "$s1", "$s0", "myRoutine"}
+	if got := parseIBranch(testString); got != want {
+		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
+	}
+}
+
+func TestParseIDirect(t *testing.T) {
+	testString := "addiu $t0, $t5, -50"
+	want := IType{"addiu", "$t0", "$t5", "-50"}
+	if got := parseIDirect(testString); got != want {
+		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
+	}
+}
+
+func TestParseJType(t *testing.T) {
+	testString := "j megaLoop"
+	want := JType{"j", "megaLoop"}
+	if got := parseJType(testString); got != want {
+		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
+	}
+}
