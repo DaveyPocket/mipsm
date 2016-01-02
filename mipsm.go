@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"mipsm/parser"
 	"mipsm/pretty"
 	"mipsm/scrubber"
 	"strconv"
