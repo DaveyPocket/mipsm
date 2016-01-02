@@ -41,9 +41,13 @@ func parseIBranch(input string) interface{} {
 
 //\s*(\S+)\s+([^,]+),\s*(\d+)\(([^\)]+)\).*
 //parseIIndirect is used for load and store operations
+//Load word and store word are different (Order of the operands)
 func parseIIndirect(input string) interface{} {
-	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*(\\d+)\\(([^\\)]+)\\).*")
+	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*(\\-\\d+|\\d+)\\(([^\\)]+)\\).*")
 	result := re.FindStringSubmatch(input)
+	if strings.ToLower(result[1]) == "sw" || strings.ToLower(result[1]) == "sb" {
+		return IType{result[1], result[4], result[2], result[3]}
+	}
 	return IType{result[1], result[2], result[4], result[3]}
 }
 
@@ -87,6 +91,8 @@ var coreFuncMap map[string](func(string) interface{}) = map[string](func(string)
 	"ori":   parseIDirect,
 	"lw":    parseIIndirect,
 	"sw":    parseIIndirect,
+	"lb":    parseIIndirect,
+	"sb":    parseIIndirect,
 	"slti":  parseIDirect,
 	"sltiu": parseIDirect,
 	"j":     parseJType,

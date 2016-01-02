@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+//TODO Write more tests
 func TestParse(t *testing.T) {
 	testString := "add $t0, $t1, $t5"
 	want := RType{"add", "$t0", "$t1", "$t5"}
@@ -36,6 +37,19 @@ func TestParseIDirect(t *testing.T) {
 	}
 }
 
+func TestParseIIndirect(t *testing.T) {
+	testString := "lw $t0, -20($ra)"
+	want := IType{"lw", "$t0", "$ra", "-20"}
+	if got := parseIIndirect(testString); got != want {
+		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
+	}
+
+	testString = "sw $t0, 04($s2)"
+	want = IType{"sw", "$s2", "$t0", "04"}
+	if got := parseIIndirect(testString); got != want {
+		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
+	}
+}
 func TestParseJType(t *testing.T) {
 	testString := "j megaLoop"
 	want := JType{"j", "megaLoop"}
