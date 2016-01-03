@@ -1,4 +1,6 @@
 //TODO error handling of incorrect lines of code.
+//TODO resolve indirect or psedo-direct address from a label for I-Type and J-Type instructions
+//--Implement via a symmbol table during the parsing phase??
 package parser
 
 import (

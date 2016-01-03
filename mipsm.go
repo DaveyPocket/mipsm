@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"mipsm/parser"
 	"mipsm/pretty"
-	"mipsm/scrubber"
 	"strconv"
 	//	"os"
 )
@@ -48,12 +47,35 @@ func F_getProgString() string {
 }
 
 func main() {
-	sample := "     	 ADD   $t0   ,   $t1, $T5"
-	fmt.Println(scrubber.Scrub(sample))
+	F_assemble("add $t0, $t1, $t2")
 }
 
 // F_assemble is an exported function of the mipsm package. The function takes in a single line of MIPS assembly code and pretty-prints a string of the assembled machine code line.
 func F_assemble(in string) {
+	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
+	var t_imm uint16
+	var t_imm2 uint32
+	instruction := parser.Parse(in)
+	switch instType := instruction.(type) {
+	case parser.RType:
+		t_meta := coreInstrType[instType.Opcode]
+		t_opcode, t_function = t_meta.opcode, t_meta.funct
+		t_rd, t_rs, t_rt = f_getRType(instType)
+		fmt.Println(pretty.PrintRType(t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt))
+	case parser.IType:
+		t_meta := coreInstrType[instType.Opcode]
+		t_opcode = t_meta.opcode
+		t_rd, t_rs, t_imm = f_getIType(instType)
+		fmt.Println(pretty.PrintIType(t_opcode, t_rs, t_rt, t_imm))
+	case parser.JType:
+		t_meta := coreInstrType[instType.Opcode]
+		t_opcode = t_meta.opcode
+		t_imm2 = f_getJType(instType)
+		fmt.Println(pretty.PrintJType(t_opcode, t_imm2))
+	}
+}
+
+/*func F_assemble(in string) {
 	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
 	var t_imm uint16
 	var t_imm2 uint32
@@ -81,22 +103,22 @@ func F_assemble(in string) {
 		t_imm2 = (f_getJType(in))
 		pretty.PrintJType(t_opcode, t_imm2)
 	}
-}
+}*/
 
 //	f_getRType returns three 8-bit unsigned integer register indices corresponding to the fields of an R-Type instruction.
-func f_getRType(in string) (uint8, uint8, uint8) {
-	return f_getReg(in, 0), f_getReg(in, 1), f_getReg(in, 2)
+func f_getRType(in parser.RType) (uint8, uint8, uint8) {
+	return f_getReg(in.Rd), f_getReg(in.Rs), f_getReg(in.Rt)
 }
 
 //	f_GetIType returns two register indices and a 16-bit unsigned integer corresponding to the fields of an I-Type instruction.
-func f_getIType(in string) (uint8, uint8, uint16) {
-	return f_getReg(in, 0), f_getReg(in, 1), uint16(f_getImm(in))
+func f_getIType(in parser.IType) (uint8, uint8, uint16) {
+	return f_getReg(in.Rt), f_getReg(in.Rs), uint16(f_getImm(in.Imm))
 }
 
 // f_getJType returns a 32-bit immediate value associated with the pseudo-direct address of the J-Type instruction.
 // TODO - Strive for correctness.
-func f_getJType(in string) uint32 {
-	return f_getImm(in)
+func f_getJType(in parser.JType) uint32 {
+	return f_getImm(in.Imm)
 }
 
 // f_getJLiteral gets resolves a pseudo-direct address for the given label. Symbol table contains labels and associated address values. DOES NOT HANDLE CLEANING UP STRING!!!
@@ -104,34 +126,14 @@ func f_getJType(in string) uint32 {
 //}
 
 // f_getReg returns the register index associated with c'th register denoted in the assembly instruction line.
-func f_getReg(in string, c int) uint8 {
-	var count int = -1
-	for i, val := range in {
-		if val == '$' {
-			count++
-		}
-		if count == c {
-			//fmt.Print(in[i:i+3], " ")
-			return regAddr[in[i:i+3]]
-		}
-	}
-	return 255
+func f_getReg(in string) uint8 {
+	return regAddr[in]
 }
 
 // f_getImm returns an immediate value obtained from a simplified instruction string.
 func f_getImm(in string) uint32 {
-	var count int = 0
-	for i, val := range in {
-		if val == ',' {
-			count++
-		}
-		if count == 2 {
-			num, _ := strconv.ParseInt(in[i+2:len(in)], 10, 32)
-			return uint32(num)
-			//return regAddr[in[i:len(in) - i]]
-		}
-	}
-	return 255
+	num, _ := strconv.ParseInt(in, 10, 32)
+	return uint32(num)
 }
 
 //	MIPS R-Type
@@ -153,7 +155,7 @@ func f_getImm(in string) uint32 {
 // AND	0	0x24
 // ADDU	0	0x21
 // NOR	0	0x27
-// OR		0	0x25
+// OR	0	0x25
 // XOR	0	0x26
 // SUBU	0	0x23
 // SLT	0	0x2A

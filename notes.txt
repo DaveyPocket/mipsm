@@ -1,0 +1,4 @@
+Potential features:
+-Custom defined macros and core instruction set
+-Customizing target machine code
+-Target export style
