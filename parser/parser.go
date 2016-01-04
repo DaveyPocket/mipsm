@@ -8,9 +8,20 @@ import (
 	"strings"
 )
 
+var counter int = 0
+
+func ResetCounter() {
+	counter = 0
+}
+
+// \s*(([^\s:]+):*)\s.*
 func Parse(input string) interface{} {
-	re := regexp.MustCompile("\\s*([^\\s]+)\\s.*")
+	re := regexp.MustCompile("\\s*(([^\\s:]+):*)\\s.*")
 	result := re.FindStringSubmatch(input)
+	if result == nil {
+		return nil
+	}
+	counter++
 	return coreFuncMap[strings.ToLower(result[1])](input)
 }
 
@@ -34,12 +45,16 @@ func parseIDirect(input string) interface{} {
 	return IType{result[1], result[2], result[3], result[4]}
 }
 
+//\s*(\S+[^:\s*])\s+([^,]+),\s*([^,]+),\s*([^\s]+)????
 // !!! Branching routines have Rs and Rt swapped.
 func parseIBranch(input string) interface{} {
 	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s]+)")
 	result := re.FindStringSubmatch(input)
 	return IType{result[1], result[3], result[2], result[4]}
 }
+
+// ParseLabel adds a label to the symbol table with its immediate address
+//\s*(.+):.*
 
 //\s*(\S+)\s+([^,]+),\s*(\d+)\(([^\)]+)\).*
 //parseIIndirect is used for load and store operations

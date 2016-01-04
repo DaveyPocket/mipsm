@@ -1,3 +1,21 @@
+/*
+   MIPSm - A "MIPS" assembler.
+   Copyright (C) 2015-2016 Bradley Boccuzzi
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 //TODO
 //Clean
 //Order for rt and rs fields for BEQ and BNE instructions
@@ -7,11 +25,12 @@
 package main
 
 import (
+	"bufio" // Reading one byte per time from the file
 	"fmt"
 	"mipsm/parser"
 	"mipsm/pretty"
+	"os" //Include os for reading stuff
 	"strconv"
-	//	"os"
 )
 
 var prog string
@@ -47,11 +66,27 @@ func F_getProgString() string {
 }
 
 func main() {
-	F_assemble("add $t0, $t1, $t2")
+	f, err := os.Open("program.asm")
+	defer f.Close() //	Close the file at the end of the program
+	if err != nil {
+		panic(err)
+	}
+	buf := bufio.NewScanner(f)
+	//	Using default split function (Change this?)
+	for buf.Scan() {
+		f_assemble(buf.Text())
+	}
+	if err := buf.Err(); err != nil {
+		//	Scanner returns an non-nil error after stopping a scan not due to EOF.
+		panic(err)
+	} else {
+		//	EOF
+		fmt.Println("Assembly successful.")
+	}
 }
 
-// F_assemble is an exported function of the mipsm package. The function takes in a single line of MIPS assembly code and pretty-prints a string of the assembled machine code line.
-func F_assemble(in string) {
+//	F_assemble is an exported function of the mipsm package. The function takes in a single line of MIPS assembly code and pretty-prints a string of the assembled machine code line.
+func f_assemble(in string) {
 	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
 	var t_imm uint16
 	var t_imm2 uint32
@@ -74,36 +109,6 @@ func F_assemble(in string) {
 		fmt.Println(pretty.PrintJType(t_opcode, t_imm2))
 	}
 }
-
-/*func F_assemble(in string) {
-	var t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt uint8
-	var t_imm uint16
-	var t_imm2 uint32
-	var inst string
-	for _, val := range in {
-		if val != ' ' {
-			inst += string(val)
-		} else {
-			break
-		}
-	}
-	t_thing := coreInstrType[inst]
-	inst = ""
-	switch t_thing.fam {
-	case t_R:
-		t_opcode, t_function = t_thing.opcode, t_thing.funct
-		t_rd, t_rs, t_rt = f_getRType(in)
-		pretty.PrintRType(t_opcode, t_function, t_rs, t_rd, t_rt, t_shamt)
-	case t_I:
-		t_opcode = t_thing.opcode
-		t_rt, t_rs, t_imm = f_getIType(in)
-		pretty.PrintIType(t_opcode, t_rs, t_rt, t_imm)
-	case t_J:
-		t_opcode = t_thing.opcode
-		t_imm2 = (f_getJType(in))
-		pretty.PrintJType(t_opcode, t_imm2)
-	}
-}*/
 
 //	f_getRType returns three 8-bit unsigned integer register indices corresponding to the fields of an R-Type instruction.
 func f_getRType(in parser.RType) (uint8, uint8, uint8) {
@@ -132,11 +137,14 @@ func f_getReg(in string) uint8 {
 
 // f_getImm returns an immediate value obtained from a simplified instruction string.
 func f_getImm(in string) uint32 {
-	num, _ := strconv.ParseInt(in, 10, 32)
+	num, err := strconv.ParseInt(in, 10, 32)
+	if err != nil {
+		panic(err)
+	}
 	return uint32(num)
 }
 
-//	MIPS R-Type
+// MIPS R-Type
 // OPCODE - RS - RT - RD - SHAMT - FUNCT
 // MIPS I-TYPE
 // OPCODE - RS - RT - IMMEDIATE
@@ -191,36 +199,36 @@ var coreInstrType map[string]t_instrType = map[string]t_instrType{
 // The map below maps the register strings to their corresponding 8-bit unsigned integer index.
 var regAddr map[string]uint8 = map[string]uint8{
 	"$zero": 0,
-	"$ze":   0,
-	"$at":   1,
-	"$v0":   2,
-	"$v1":   3,
-	"$a0":   4,
-	"$a1":   5,
-	"$a2":   6,
-	"$a3":   7,
-	"$t0":   8,
-	"$t1":   9,
-	"$t2":   10,
-	"$t3":   11,
-	"$t4":   12,
-	"$t5":   13,
-	"$t6":   14,
-	"$t7":   15,
-	"$s0":   16,
-	"$s1":   17,
-	"$s2":   18,
-	"$s3":   19,
-	"$s4":   20,
-	"$s5":   21,
-	"$s6":   22,
-	"$s7":   23,
-	"$t8":   24,
-	"$t9":   25,
-	"$k0":   26,
-	"$k1":   27,
-	"$gp":   28,
-	"$sp":   29,
-	"$fp":   30,
-	"$ra":   31,
+	//	"$ze":   0,
+	"$at": 1,
+	"$v0": 2,
+	"$v1": 3,
+	"$a0": 4,
+	"$a1": 5,
+	"$a2": 6,
+	"$a3": 7,
+	"$t0": 8,
+	"$t1": 9,
+	"$t2": 10,
+	"$t3": 11,
+	"$t4": 12,
+	"$t5": 13,
+	"$t6": 14,
+	"$t7": 15,
+	"$s0": 16,
+	"$s1": 17,
+	"$s2": 18,
+	"$s3": 19,
+	"$s4": 20,
+	"$s5": 21,
+	"$s6": 22,
+	"$s7": 23,
+	"$t8": 24,
+	"$t9": 25,
+	"$k0": 26,
+	"$k1": 27,
+	"$gp": 28,
+	"$sp": 29,
+	"$fp": 30,
+	"$ra": 31,
 }
