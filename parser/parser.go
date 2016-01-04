@@ -15,7 +15,29 @@ func ResetCounter() {
 	counter = 0
 }
 
+//	Create an empty symbol table map.
+//	A map to empty interfaces may not be the best idea...
+//	Currently being used to determine an invalid entry in the symbol table
 var symTable map[string]int = map[string]int{}
+
+func tableAdd(in string, address int) {
+	symTable[in] = address
+}
+
+func tableApply(in string, address int) {
+	if _, ok := symTable[in]; !ok {
+		tableAdd(in, address)
+	}
+}
+
+func TableGet(in string) int {
+	return symTable[in]
+}
+
+//	Should only be used for debugging/crash report
+func GetEntireTable() map[string]int {
+	return symTable
+}
 
 // \s*(([^\s:]+):*)\s.*
 func Parse(input string) interface{} {
@@ -27,6 +49,7 @@ func Parse(input string) interface{} {
 	// result[1]: label with colon. result[2] label without colon
 	if result[1] != result[2] {
 		// Add to the symbol table (If the symbol does not already exist)
+		tableApply(result[2], counter)
 		return Parse(result[3])
 	}
 	counter++

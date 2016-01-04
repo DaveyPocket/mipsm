@@ -15,7 +15,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+//	mipsm.go - The main program.
 //TODO
 //Clean
 //Order for rt and rs fields for BEQ and BNE instructions
@@ -87,6 +87,7 @@ func main() {
 	//	Add error handling
 	buf = bufio.NewScanner(f)
 	//	Using default split function (Change this?)
+	parser.ResetCounter()
 	for buf.Scan() {
 		f_assemble(buf.Text())
 	}
@@ -97,6 +98,8 @@ func main() {
 		//	EOF
 		fmt.Println("Assembly successful.")
 	}
+
+	fmt.Printf("%v", parser.GetEntireTable())
 }
 
 //	F_assemble is an exported function of the mipsm package. The function takes in a single line of MIPS assembly code and pretty-prints a string of the assembled machine code line.
