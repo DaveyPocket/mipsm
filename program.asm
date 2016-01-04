@@ -1,4 +1,4 @@
-add $t0, $t1, $s0
+label:add $t0, $t1, $s0
 
    
 

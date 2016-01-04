@@ -8,18 +8,26 @@ import (
 	"strings"
 )
 
+// Counter keeps the current value of the current line being parsed (of relevant assembly code).
 var counter int = 0
 
 func ResetCounter() {
 	counter = 0
 }
 
+var symTable map[string]int = map[string]int{}
+
 // \s*(([^\s:]+):*)\s.*
 func Parse(input string) interface{} {
-	re := regexp.MustCompile("\\s*(([^\\s:]+):*)\\s.*")
+	re := regexp.MustCompile("\\s*(([^\\s:]+):*)\\s*(.*)")
 	result := re.FindStringSubmatch(input)
 	if result == nil {
 		return nil
+	}
+	// result[1]: label with colon. result[2] label without colon
+	if result[1] != result[2] {
+		// Add to the symbol table (If the symbol does not already exist)
+		return Parse(result[3])
 	}
 	counter++
 	return coreFuncMap[strings.ToLower(result[1])](input)

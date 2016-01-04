@@ -72,6 +72,20 @@ func main() {
 		panic(err)
 	}
 	buf := bufio.NewScanner(f)
+	for buf.Scan() {
+		//	Fill the symbol table.
+		parser.Parse(buf.Text())
+	}
+	if err := buf.Err(); err != nil {
+		//	Scanner returns an non-nil error after stopping a scan not due to EOF.
+		panic(err)
+	} else {
+		//	EOF
+		fmt.Println("Initial parse successful.")
+	}
+	f.Seek(0, 0) // Reset seeking pointer for reading in file into bufio buffer.
+	//	Add error handling
+	buf = bufio.NewScanner(f)
 	//	Using default split function (Change this?)
 	for buf.Scan() {
 		f_assemble(buf.Text())
