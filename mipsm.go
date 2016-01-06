@@ -65,9 +65,16 @@ func F_getProgString() string {
 	return prog
 }
 
+func fileStart(f *os.File) {
+	if pos, err := f.Seek(0, os.SEEK_SET); err != nil || pos != 0 {
+		panic(err) // Nil error for non-zero return position?
+	} // Reset seeking pointer for reading in file into bufio buffer.
+
+}
+
 func main() {
-	f, err := os.Open("program.asm")
-	defer f.Close() //	Close the file at the end of the program
+	f, err := os.Open("program.asm") //	Only temporary, for testing purposes.
+	defer f.Close()                  //	Close the file at the end of the program
 	if err != nil {
 		panic(err)
 	}
@@ -83,8 +90,7 @@ func main() {
 		//	EOF
 		fmt.Println("Initial parse successful.")
 	}
-	f.Seek(0, 0) // Reset seeking pointer for reading in file into bufio buffer.
-	//	Add error handling
+	fileStart(f)
 	buf = bufio.NewScanner(f)
 	//	Using default split function (Change this?)
 	parser.ResetCounter()
@@ -98,8 +104,6 @@ func main() {
 		//	EOF
 		fmt.Println("Assembly successful.")
 	}
-
-	fmt.Printf("%v", parser.GetEntireTable())
 }
 
 //	F_assemble is an exported function of the mipsm package. The function takes in a single line of MIPS assembly code and pretty-prints a string of the assembled machine code line.

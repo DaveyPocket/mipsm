@@ -4,12 +4,17 @@
 package parser
 
 import (
+	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 // Counter keeps the current value of the current line being parsed (of relevant assembly code).
 var counter int = 0
+
+const pseudoDirectMax int = 67108864 //	2^26, MIPS "Green card"
+const wordSize int = 4
 
 func ResetCounter() {
 	counter = 0
@@ -30,6 +35,25 @@ func tableApply(in string, address int) {
 	}
 }
 
+//	E.g. jal or j instructions.
+func resolvePseudoDirect(in string) int {
+	pda := TableGet(in)
+	if pda >= pseudoDirectMax {
+		panic(errors.New("Target pseudo-direct address exceeds maximum allowable size."))
+	}
+	return pda
+}
+
+//	E.g. beq or bne instructions.
+func resolvePCRelative(in string) int {
+	return (TableGet(in) - counter)
+}
+
+//	E.g. loading a constant from memory.
+func resolveBase(in string) int {
+	return TableGet(in)
+}
+
 func TableGet(in string) int {
 	return symTable[in]
 }
@@ -37,6 +61,11 @@ func TableGet(in string) int {
 //	Should only be used for debugging/crash report
 func GetEntireTable() map[string]int {
 	return symTable
+}
+
+//	Increments the counter by one word (four bytes)
+func incrementCounter() {
+	counter += wordSize
 }
 
 // \s*(([^\s:]+):*)\s.*
@@ -52,7 +81,7 @@ func Parse(input string) interface{} {
 		tableApply(result[2], counter)
 		return Parse(result[3])
 	}
-	counter++
+	incrementCounter()
 	return coreFuncMap[strings.ToLower(result[1])](input)
 }
 
@@ -70,7 +99,8 @@ func parseJType(input string) interface{} {
 }
 
 //TODO change regex to accept only numerical values
-func parseIDirect(input string) interface{} {
+//TODO Allow branches and jumps to accept labels
+func parseIImmediate(input string) interface{} {
 	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s]+)")
 	result := re.FindStringSubmatch(input)
 	return IType{result[1], result[2], result[3], result[4]}
@@ -81,16 +111,18 @@ func parseIDirect(input string) interface{} {
 func parseIBranch(input string) interface{} {
 	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s]+)")
 	result := re.FindStringSubmatch(input)
-	return IType{result[1], result[3], result[2], result[4]}
+	pcr := resolvePCRelative(result[4])
+
+	return IType{result[1], result[3], result[2], strconv.Itoa(pcr)}
 }
 
 // ParseLabel adds a label to the symbol table with its immediate address
 //\s*(.+):.*
 
 //\s*(\S+)\s+([^,]+),\s*(\d+)\(([^\)]+)\).*
-//parseIIndirect is used for load and store operations
+//parseIBaseOffset is used for load and store operations
 //Load word and store word are different (Order of the operands)
-func parseIIndirect(input string) interface{} {
+func parseIBaseOffset(input string) interface{} {
 	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*(\\-\\d+|\\d+)\\(([^\\)]+)\\).*")
 	result := re.FindStringSubmatch(input)
 	if strings.ToLower(result[1]) == "sw" || strings.ToLower(result[1]) == "sb" {
@@ -133,16 +165,16 @@ var coreFuncMap map[string](func(string) interface{}) = map[string](func(string)
 	"jr":    parseRType, // Special case of R-Type
 	"beq":   parseIBranch,
 	"bne":   parseIBranch,
-	"addi":  parseIDirect,
-	"addiu": parseIDirect,
-	"andi":  parseIDirect,
-	"ori":   parseIDirect,
-	"lw":    parseIIndirect,
-	"sw":    parseIIndirect,
-	"lb":    parseIIndirect,
-	"sb":    parseIIndirect,
-	"slti":  parseIDirect,
-	"sltiu": parseIDirect,
+	"addi":  parseIImmediate,
+	"addiu": parseIImmediate,
+	"andi":  parseIImmediate,
+	"ori":   parseIImmediate,
+	"lw":    parseIBaseOffset,
+	"sw":    parseIBaseOffset,
+	"lb":    parseIBaseOffset,
+	"sb":    parseIBaseOffset,
+	"slti":  parseIImmediate,
+	"sltiu": parseIImmediate,
 	"j":     parseJType,
 	"jal":   parseJType,
 }
