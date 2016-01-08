@@ -1,7 +1,4 @@
-.text
-.global main
-#$s0 - 'Previous' Value
-#$s1 - 'Current' value
+#Comments
 main:
 	addi $s1, $zero, 1 #Initialize current value with 1.
 	loop:					#Begin loop.
@@ -16,4 +13,3 @@ main:
 EVEN:
 	nor $a0, $a0, $zero
 	andi $v0, $a0, 1	#Bitmask zeroth bit of current value.
-	jr $ra

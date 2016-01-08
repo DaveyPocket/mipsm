@@ -73,11 +73,11 @@ func fileStart(f *os.File) {
 }
 
 func main() {
-	f, err := os.Open("program.asm") //	Only temporary, for testing purposes.
-	defer f.Close()                  //	Close the file at the end of the program
+	f, err := os.Open("program2.asm") //	Only temporary, for testing purposes.
 	if err != nil {
 		panic(err)
 	}
+	defer f.Close() //	Close the file at the end of the program
 	buf := bufio.NewScanner(f)
 	for buf.Scan() {
 		//	Fill the symbol table.

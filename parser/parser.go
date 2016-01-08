@@ -29,6 +29,15 @@ func tableAdd(in string, address int) {
 	symTable[in] = address
 }
 
+func stripComments(in string) string {
+	re := regexp.MustCompile("(.*)\\s*#.*")
+	out := re.FindStringSubmatch(in)
+	if out == nil {
+		return in
+	}
+	return out[1]
+}
+
 func tableApply(in string, address int) {
 	if _, ok := symTable[in]; !ok {
 		tableAdd(in, address)
@@ -70,38 +79,39 @@ func incrementCounter() {
 
 // \s*(([^\s:]+):*)\s.*
 func Parse(input string) interface{} {
-	re := regexp.MustCompile("\\s*(([^\\s:]+):*)\\s*(.*)")
-	result := re.FindStringSubmatch(input)
+	clean := stripComments(input)
+	re := regexp.MustCompile("\\s*(([^\\s:]+):*)\\s*([^#]*).*")
+	result := re.FindStringSubmatch(clean)
 	if result == nil {
 		return nil
 	}
-	// result[1]: label with colon. result[2] label without colon
+	//	result[1] - label with colon
+	//	result[2] - label without colon
 	if result[1] != result[2] {
 		// Add to the symbol table (If the symbol does not already exist)
 		tableApply(result[2], counter)
 		return Parse(result[3])
 	}
 	incrementCounter()
-	return coreFuncMap[strings.ToLower(result[1])](input)
+	return coreFuncMap[strings.ToLower(result[1])](clean)
 }
 
 func parseRType(input string) interface{} {
-	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^,]+).*")
+	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s#]+).*")
 	result := re.FindStringSubmatch(input)
 	return RType{result[1], result[2], result[3], result[4]}
 }
 
 //TODO Modify the regular expressions to support comments adjacent to the last meaningful object in the line.
 func parseJType(input string) interface{} {
-	re := regexp.MustCompile("\\s*([^\\s]+)\\s([^\\s]+).*")
+	re := regexp.MustCompile("\\s*([^\\s]+)\\s([^\\s#]+).*")
 	result := re.FindStringSubmatch(input)
-	return JType{result[1], result[2]}
+	pda := resolvePseudoDirect(result[2])
+	return JType{result[1], strconv.Itoa(pda)}
 }
 
-//TODO change regex to accept only numerical values
-//TODO Allow branches and jumps to accept labels
 func parseIImmediate(input string) interface{} {
-	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s]+)")
+	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s#]+)")
 	result := re.FindStringSubmatch(input)
 	return IType{result[1], result[2], result[3], result[4]}
 }
@@ -109,7 +119,7 @@ func parseIImmediate(input string) interface{} {
 //\s*(\S+[^:\s*])\s+([^,]+),\s*([^,]+),\s*([^\s]+)????
 // !!! Branching routines have Rs and Rt swapped.
 func parseIBranch(input string) interface{} {
-	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s]+)")
+	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*([^,]+),\\s*([^\\s#]+).*")
 	result := re.FindStringSubmatch(input)
 	pcr := resolvePCRelative(result[4])
 
