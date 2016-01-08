@@ -135,9 +135,10 @@ func parseIBranch(input string) interface{} {
 func parseIBaseOffset(input string) interface{} {
 	re := regexp.MustCompile("\\s*(\\S+)\\s+([^,]+),\\s*(\\-\\d+|\\d+)\\(([^\\)]+)\\).*")
 	result := re.FindStringSubmatch(input)
-	if strings.ToLower(result[1]) == "sw" || strings.ToLower(result[1]) == "sb" {
-		return IType{result[1], result[4], result[2], result[3]}
-	}
+	//if strings.ToLower(result[1]) == "sw" || strings.ToLower(result[1]) == "sb" {
+	//		return IType{result[1], result[4], result[2], result[3]}
+	//}
+	// Is reversing rt and rs necessary?
 	return IType{result[1], result[2], result[4], result[3]}
 }
 

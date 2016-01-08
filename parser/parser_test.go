@@ -29,24 +29,24 @@ func TestParseIBranch(t *testing.T) {
 	}
 }
 
-func TestParseIDirect(t *testing.T) {
+func TestParseIImmediate(t *testing.T) {
 	testString := "addiu $t0, $t5, -50"
 	want := IType{"addiu", "$t0", "$t5", "-50"}
-	if got := parseIDirect(testString); got != want {
+	if got := parseIImmediate(testString); got != want {
 		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
 	}
 }
 
-func TestParseIIndirect(t *testing.T) {
+func TestParseIBaseOffset(t *testing.T) {
 	testString := "lw $t0, -20($ra)"
 	want := IType{"lw", "$t0", "$ra", "-20"}
-	if got := parseIIndirect(testString); got != want {
+	if got := parseIBaseOffset(testString); got != want {
 		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
 	}
 
 	testString = "sw $t0, 04($s2)"
 	want = IType{"sw", "$s2", "$t0", "04"}
-	if got := parseIIndirect(testString); got != want {
+	if got := parseIBaseOffset(testString); got != want {
 		t.Errorf("Not matching!!!\nInput: %s\nExpected: %+v\nGot: %+v\n", testString, want, got)
 	}
 }

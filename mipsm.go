@@ -73,7 +73,7 @@ func fileStart(f *os.File) {
 }
 
 func main() {
-	f, err := os.Open("program2.asm") //	Only temporary, for testing purposes.
+	f, err := os.Open("demo.asm") //	Only temporary, for testing purposes.
 	if err != nil {
 		panic(err)
 	}
@@ -121,7 +121,7 @@ func f_assemble(in string) {
 	case parser.IType:
 		t_meta := coreInstrType[instType.Opcode]
 		t_opcode = t_meta.opcode
-		t_rd, t_rs, t_imm = f_getIType(instType)
+		t_rt, t_rs, t_imm = f_getIType(instType)
 		fmt.Println(pretty.PrintIType(t_opcode, t_rs, t_rt, t_imm))
 	case parser.JType:
 		t_meta := coreInstrType[instType.Opcode]
