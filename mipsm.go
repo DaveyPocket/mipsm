@@ -208,7 +208,7 @@ var coreInstrType map[string]t_instrType = map[string]t_instrType{
 	"addi":  {t_I, 0x08, 0},
 	"addiu": {t_I, 0x09, 0},
 	"andi":  {t_I, 0x0C, 0},
-	"ori":   {t_I, 0x0F, 0},
+	"ori":   {t_I, 0x0D, 0},
 	"lw":    {t_I, 0x23, 0},
 	"sw":    {t_I, 0x2B, 0},
 	"slti":  {t_I, 0x0A, 0},

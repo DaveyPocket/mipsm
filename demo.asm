@@ -16,4 +16,4 @@ loop:
 
 end:
 	#Loop forever....
-	beq $zero, $zero, end
+	j end

@@ -55,7 +55,7 @@ func resolvePseudoDirect(in string) int {
 
 //	E.g. beq or bne instructions.
 func resolvePCRelative(in string) int {
-	return (TableGet(in) - counter)
+	return (TableGet(in)>>2 - (counter >> 2) - 1)
 }
 
 //	E.g. loading a constant from memory.
@@ -92,7 +92,7 @@ func Parse(input string) interface{} {
 		tableApply(result[2], counter)
 		return Parse(result[3])
 	}
-	incrementCounter()
+	defer incrementCounter()
 	return coreFuncMap[strings.ToLower(result[1])](clean)
 }
 
